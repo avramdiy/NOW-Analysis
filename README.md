@@ -12,6 +12,8 @@
 
 ### 2nd Commit
 
+- Split the `now.us.txt` dataset into three time-based dataframes (Periods 1/2/3 spanning 2012->2013, 2014->2015, and 2016->2017 respectively) and dropped the `OpenInt` column; the root Flask page now shows each period as its own HTML table.
+
 ### 3rd Commit
 
 ### 4th Commit

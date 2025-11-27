@@ -27,10 +27,33 @@ def index():
 	if not os.path.exists(DATA_PATH):
 		abort(404, description=f"Dataset not found: {DATA_PATH}")
 
+	# load CSV and clean
 	df = pd.read_csv(DATA_PATH)
 
-	html_table = df.to_html(classes='dataframe', index=False)
-	page = f"<html><head>{TABLE_CSS}<title>now.us - data</title></head><body>\n<h1>now.us.csv (ServiceNow) — dataset preview</h1>\n{html_table}\n</body></html>"
+	# drop OpenInt if present (requested)
+	if 'OpenInt' in df.columns:
+		df = df.drop(columns=['OpenInt'])
+
+	# ensure Date is datetime so we can split by ranges
+	df['Date'] = pd.to_datetime(df['Date'])
+
+	# The CSV spans 2012-06-29 through 2017-11-10. Split it into 3 meaningful periods:
+	#  - period_1: 2012-06-29 through 2013-12-31
+	#  - period_2: 2014-01-01 through 2015-12-31
+	#  - period_3: 2016-01-01 through 2017-11-10
+	period_1 = df[(df['Date'] >= '2012-06-29') & (df['Date'] <= '2013-12-31')]
+	period_2 = df[(df['Date'] >= '2014-01-01') & (df['Date'] <= '2015-12-31')]
+	period_3 = df[(df['Date'] >= '2016-01-01') & (df['Date'] <= '2017-11-10')]
+
+	# render the three periods separately in the page (keep original behavior otherwise)
+	html_p1 = period_1.to_html(classes='dataframe', index=False)
+	html_p2 = period_2.to_html(classes='dataframe', index=False)
+	html_p3 = period_3.to_html(classes='dataframe', index=False)
+
+	page = f"<html><head>{TABLE_CSS}<title>now.us - data</title></head><body>\n<h1>now.us.csv (ServiceNow) — dataset preview</h1>\n"
+	page += f"<h2>Period 1: 2012-06-29 through 2013-12-31 (n={len(period_1)})</h2>\n{html_p1}\n"
+	page += f"<h2>Period 2: 2014-01-01 through 2015-12-31 (n={len(period_2)})</h2>\n{html_p2}\n"
+	page += f"<h2>Period 3: 2016-01-01 through 2017-11-10 (n={len(period_3)})</h2>\n{html_p3}\n</body></html>"
 	return render_template_string(page)
 
 @app.route('/download')
