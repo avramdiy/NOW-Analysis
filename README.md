@@ -20,4 +20,6 @@
 
 ### 4th Commit
 
+- Added a `/yearly-open` route that computes the yearly average `Open` price for each of the three time-split dataframes and returns a combined line chart (inline PNG) comparing the periods.
+
 ### 5th Commit

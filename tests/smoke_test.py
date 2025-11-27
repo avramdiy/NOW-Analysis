@@ -27,5 +27,10 @@ def run_smoke():
     has_title = 'Bollinger Bands' in txt2
     print('BOLLINGER IMGS', imgs, 'HAS_TITLE', has_title)
 
+    r3 = client.get('/yearly-open')
+    print('YEARLY STATUS', r3.status_code)
+    txt3 = r3.get_data(as_text=True)
+    print('YEARLY HAS IMG', '<img' in txt3)
+
 if __name__ == '__main__':
     run_smoke()

@@ -135,6 +135,55 @@ def bollinger():
 	return render_template_string(html)
 
 
+@app.route('/yearly-open')
+def yearly_open():
+	"""Plot yearly average Open price for each of the three periods on a single line chart."""
+	if not os.path.exists(DATA_PATH):
+		abort(404, description=f"Dataset not found: {DATA_PATH}")
+
+	p1, p2, p3 = _load_and_split()
+
+	def yearly_avg(df):
+		if df.empty:
+			return pd.Series(dtype=float)
+		s = df.set_index('Date')['Open'].resample('Y').mean()
+		# normalize index to year numbers for plotting
+		s.index = s.index.year
+		return s
+
+	s1 = yearly_avg(p1)
+	s2 = yearly_avg(p2)
+	s3 = yearly_avg(p3)
+
+	# plot them together
+	fig, ax = plt.subplots(figsize=(10, 4))
+	if not s1.empty:
+		ax.plot(s1.index, s1.values, marker='o', label='Period 1 (2012-2013)')
+	if not s2.empty:
+		ax.plot(s2.index, s2.values, marker='o', label='Period 2 (2014-2015)')
+	if not s3.empty:
+		ax.plot(s3.index, s3.values, marker='o', label='Period 3 (2016-2017)')
+
+	ax.set_xlabel('Year')
+	ax.set_ylabel('Average Open Price')
+	ax.set_title('Yearly Average Open Price — Periods 1/2/3')
+	ax.grid(True, linestyle='--', alpha=0.5)
+	ax.legend(loc='best')
+
+	buf = io.BytesIO()
+	fig.tight_layout()
+	fig.savefig(buf, format='png')
+	plt.close(fig)
+	buf.seek(0)
+	img_b64 = base64.b64encode(buf.read()).decode('ascii')
+
+	page = f"<html><head>{TABLE_CSS}<title>Yearly Average Open</title></head><body>"
+	page += "<h1>Yearly Average Open Price — Combined</h1>"
+	page += f"<img src=\"data:image/png;base64,{img_b64}\" alt='yearly-open'/>"
+	page += "</body></html>"
+	return render_template_string(page)
+
+
 if __name__ == '__main__':
 	# default dev server
 	app.run(host='127.0.0.1', port=5000, debug=True)
