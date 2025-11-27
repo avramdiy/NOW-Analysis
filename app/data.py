@@ -184,6 +184,60 @@ def yearly_open():
 	return render_template_string(page)
 
 
+@app.route('/yearly-high-low')
+def yearly_high_low():
+	"""Plot yearly average High and Low prices for each of the three periods on a single chart."""
+	if not os.path.exists(DATA_PATH):
+		abort(404, description=f"Dataset not found: {DATA_PATH}")
+
+	p1, p2, p3 = _load_and_split()
+
+	def yearly_avg_high_low(df):
+		if df.empty:
+			return pd.DataFrame(columns=['High', 'Low'])
+		s = df.set_index('Date')[['High', 'Low']].resample('Y').mean()
+		s.index = s.index.year
+		return s
+
+	s1 = yearly_avg_high_low(p1)
+	s2 = yearly_avg_high_low(p2)
+	s3 = yearly_avg_high_low(p3)
+
+	fig, ax = plt.subplots(figsize=(10, 5))
+
+	# utility to plot each period's High and Low with different styles
+	def plot_series(series, label_prefix, color_high, color_low, marker='o'):
+		if not series.empty:
+			years = series.index
+			ax.plot(years, series['High'], marker=marker, linestyle='-', color=color_high,
+					label=f'{label_prefix} High')
+			ax.plot(years, series['Low'], marker=marker, linestyle='--', color=color_low,
+					label=f'{label_prefix} Low')
+
+	plot_series(s1, 'Period 1 (2012-2013)', color_high='C0', color_low='C0')
+	plot_series(s2, 'Period 2 (2014-2015)', color_high='C1', color_low='C1')
+	plot_series(s3, 'Period 3 (2016-2017)', color_high='C2', color_low='C2')
+
+	ax.set_xlabel('Year')
+	ax.set_ylabel('Average Price')
+	ax.set_title('Yearly Average High and Low Prices — Combined')
+	ax.grid(True, linestyle='--', alpha=0.5)
+	ax.legend(loc='best')
+
+	buf = io.BytesIO()
+	fig.tight_layout()
+	fig.savefig(buf, format='png')
+	plt.close(fig)
+	buf.seek(0)
+	img_b64 = base64.b64encode(buf.read()).decode('ascii')
+
+	page = f"<html><head>{TABLE_CSS}<title>Yearly High/Low</title></head><body>"
+	page += "<h1>Yearly Average High & Low Prices — Combined</h1>"
+	page += f"<img src=\"data:image/png;base64,{img_b64}\" alt='yearly-high-low'/>"
+	page += "</body></html>"
+	return render_template_string(page)
+
+
 if __name__ == '__main__':
 	# default dev server
 	app.run(host='127.0.0.1', port=5000, debug=True)

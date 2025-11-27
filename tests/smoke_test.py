@@ -32,5 +32,10 @@ def run_smoke():
     txt3 = r3.get_data(as_text=True)
     print('YEARLY HAS IMG', '<img' in txt3)
 
+    r4 = client.get('/yearly-high-low')
+    print('HIGHLOW STATUS', r4.status_code)
+    txt4 = r4.get_data(as_text=True)
+    print('HIGHLOW HAS IMG', '<img' in txt4)
+
 if __name__ == '__main__':
     run_smoke()
