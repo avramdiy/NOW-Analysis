@@ -19,5 +19,13 @@ def run_smoke():
     print('HAS_OPENINT', has_openint)
     print('HAS_P1', p1, 'HAS_P2', p2, 'HAS_P3', p3)
 
+    r2 = client.get('/bollinger')
+    print('BOLLINGER STATUS', r2.status_code)
+    txt2 = r2.get_data(as_text=True)
+    # expect a small HTML page embedding 3 PNG images
+    imgs = txt2.count('<img')
+    has_title = 'Bollinger Bands' in txt2
+    print('BOLLINGER IMGS', imgs, 'HAS_TITLE', has_title)
+
 if __name__ == '__main__':
     run_smoke()

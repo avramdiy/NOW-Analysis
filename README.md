@@ -16,6 +16,8 @@
 
 ### 3rd Commit
 
+- Added a `/bollinger` route which computes and visualizes Bollinger Bands (20-day MA ± 2σ) for each of the three time-split dataframes and returns inline PNG plots for each period.
+
 ### 4th Commit
 
 ### 5th Commit
